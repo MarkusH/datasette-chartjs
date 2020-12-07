@@ -1,0 +1,7 @@
+[tool.black]
+target-version = ['py38']
+
+[tool.isort]
+combine_as_imports = true
+known_first_party = ["datasette_chartjs", "tests"]
+profile = "black"
