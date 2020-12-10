@@ -25,9 +25,12 @@ const datasetChartJsPlugin = {
   createChart() {
     Chart.platform.disableCSSInjection = true;
     let el = document.createElement('canvas');
+    this.state.chart = new Chart(el, {
+      type: this.chartType,
+      options: { maintainAspectRatio: false },
+    });
     el.style.width = '100%';
     el.style.height = '250px';
-    this.state.chart = new Chart(el, { type: this.chartType });
     this.state.container.appendChild(el);
   },
   createContainer() {
@@ -82,7 +85,7 @@ const datasetChartJsPlugin = {
   },
   createToggleButton() {
     let that = this;
-    let el = document.createElement('a');
+    let el = document.createElement('button');
     el.innerText = 'Show chart';
     el.onclick = () => {
       let newState = that.toggleShown();
