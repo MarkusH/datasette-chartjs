@@ -2,8 +2,6 @@ import os
 
 from setuptools import setup
 
-VERSION = "0.1"
-
 
 def get_long_description():
     with open(
@@ -23,10 +21,9 @@ setup(
     project_urls={
         "Issues": "https://github.com/MarkusH/datasette-chartjs/issues",
         "CI": "https://github.com/MarkusH/datasette-chartjs/actions",
-        "Changelog": "https://github.com/MarkusH/datasette-chartjs/releases",
+        "Changelog": "https://github.com/MarkusH/datasette-chartjs/blob/main/CHANGES.md",  # noqa
     },
     license="Apache License, Version 2.0",
-    version=VERSION,
     packages=["datasette_chartjs"],
     package_data={
         "datasette_chartjs": [

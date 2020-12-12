@@ -1,3 +1,6 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=4,<5"]
+
 [tool.black]
 target-version = ['py38']
 
@@ -5,3 +8,5 @@ target-version = ['py38']
 combine_as_imports = true
 known_first_party = ["datasette_chartjs", "tests"]
 profile = "black"
+
+[tool.setuptools_scm]
