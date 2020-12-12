@@ -1,19 +1,20 @@
 const datasetChartJsPlugin = {
   colors: [
-    'blue',
-    'green',
-    'red',
-    'orange',
-    'teal',
-    'lime',
-    'coral',
-    'gold',
-    'navy',
-    'darkgreen',
-    'maroon',
-    'yellow',
+    Color('blue'),
+    Color('green'),
+    Color('red'),
+    Color('orange'),
+    Color('teal'),
+    Color('lime'),
+    Color('coral'),
+    Color('gold'),
+    Color('navy'),
+    Color('darkgreen'),
+    Color('maroon'),
+    Color('yellow'),
   ],
   state: {
+    canvas: null,
     chart: null,
     chartType: 'line',
     container: null,
@@ -22,16 +23,11 @@ const datasetChartJsPlugin = {
     shown: true,
     xColumnName: null,
   },
-  createChart() {
-    Chart.platform.disableCSSInjection = true;
-    let el = document.createElement('canvas');
-    this.state.chart = new Chart(el, {
-      type: this.chartType,
-      options: { maintainAspectRatio: false },
-    });
-    el.style.width = '100%';
-    el.style.height = '250px';
-    this.state.container.appendChild(el);
+  createCanvas() {
+    this.state.canvas = document.createElement('canvas');
+    this.state.canvas.style.width = '100%';
+    this.state.canvas.style.height = '250px';
+    this.state.container.appendChild(this.state.canvas);
   },
   createContainer() {
     let container = document.createElement('div');
@@ -72,9 +68,17 @@ const datasetChartJsPlugin = {
     [
       ['line', 'Line chart'],
       ['bar', 'Bar chart'],
+      ['horizontalBar', 'Horizontal bar chart'],
+      ['polarArea', 'Polar area chart'],
+      ['pie', 'Pie chart'],
+      ['doughnut', 'Doughnut chart'],
+      ['radar', 'Radar chart'],
     ].forEach((element) => {
       let option = document.createElement('option');
       option.setAttribute('value', element[0]);
+      if (element[0] === that.state.chartType) {
+        option.setAttribute('selected', 'selected');
+      }
       option.innerText = element[1];
       style.appendChild(option);
     });
@@ -97,45 +101,26 @@ const datasetChartJsPlugin = {
     };
     this.state.container.parentNode.insertBefore(el, this.state.container);
   },
-  init() {
-    if (document.querySelector('body.table,body.row,body.query')) {
-      this.createContainer();
-      this.createForm();
-      this.createChart();
-      this.createToggleButton();
-      this.loadData();
-    }
-  },
-  loadData() {
+  formatBarLineRadarChartContext(xColumnIndex) {
     let that = this;
-    let path = location.pathname + '.json' + location.search;
-    fetch(path)
-      .then((r) => r.json())
-      .then((data) => that.setData(data));
-  },
-  refreshChart() {
-    let xColumnIndex;
-    if (this.state.xColumnName === null) {
-      xColumnIndex = 0;
-    } else {
-      xColumnIndex = this.state.data.columns.indexOf(this.state.xColumnName);
-    }
+    let fill =
+      this.state.chartType === 'line' || this.state.chartType === 'radar'
+        ? false
+        : true;
     let labels = new Array();
     let datasets = new Array();
-    let dsIdx = 0;
     this.state.data.columns.forEach((column, index) => {
       if (index !== xColumnIndex) {
-        let ctx = {
-          borderColor: this.colors[dsIdx % this.colors.length],
-          fill: false,
-          label: column,
+        datasets.push({
+          backgroundColor: that.colors[index % that.colors.length]
+            .alpha(0.5)
+            .rgbaString(),
+          borderColor: that.colors[index % that.colors.length].rgbString(),
+          borderWidth: fill ? 1 : 2,
           data: new Array(),
-        };
-        if (this.state.chartType === 'bar') {
-          ctx.backgroundColor = this.colors[dsIdx % this.colors.length];
-        }
-        datasets.push(ctx);
-        dsIdx++;
+          fill: fill,
+          label: column,
+        });
       }
     });
     this.state.data.rows.forEach((row) => {
@@ -149,15 +134,95 @@ const datasetChartJsPlugin = {
         }
       });
     });
-    this.state.chart.data = {
-      labels: labels,
-      datasets: datasets,
+    return {
+      type: this.state.chartType,
+      data: {
+        labels: labels,
+        datasets: datasets,
+      },
+      options: {},
     };
-    if (this.state.chartType !== this.state.chart.config.type) {
-      this.state.chart.config.type = this.state.chartType;
-      this.state.chart.render();
+  },
+  formatDoughnutPiePolarChartContext() {
+    if (this.state.data.rows.length !== 1) {
+      console.error('Expected a single data row.');
+      return {};
     }
-    this.state.chart.update();
+    let backgroundColors = [];
+    let borderColors = [];
+    for (let i = 0; i < this.state.data.columns.length; ++i) {
+      backgroundColors.push(
+        this.colors[i % this.colors.length].alpha(0.5).rgbaString()
+      );
+      borderColors.push(this.colors[i % this.colors.length].rgbString());
+    }
+    return {
+      type: this.state.chartType,
+      data: {
+        labels: this.state.data.columns,
+        datasets: [
+          {
+            backgroundColor: backgroundColors,
+            borderAlign: 'inner',
+            borderColor: borderColors,
+            borderWidth: 1,
+            data: this.state.data.rows[0],
+          },
+        ],
+      },
+      options: {},
+    };
+  },
+  init() {
+    if (document.querySelector('body.table,body.row,body.query')) {
+      Chart.platform.disableCSSInjection = true;
+      this.createContainer();
+      this.createForm();
+      this.createCanvas();
+      this.createToggleButton();
+      this.loadData();
+    }
+  },
+  loadData() {
+    let that = this;
+    let path = location.pathname + '.json' + location.search;
+    fetch(path)
+      .then((r) => r.json())
+      .then((data) => that.setData(data));
+  },
+  renderChart() {
+    let that = this;
+    if (this.state.chart !== null) {
+      this.state.chart.destroy();
+    }
+    this.state.canvas.getContext('2d').clear();
+
+    let xColumnIndex;
+    if (this.state.xColumnName === null) {
+      xColumnIndex = 0;
+    } else {
+      xColumnIndex = this.state.data.columns.indexOf(this.state.xColumnName);
+    }
+    let labels = new Array();
+    let datasets = new Array();
+    let dsIdx = 0;
+    let context;
+    switch (this.state.chartType) {
+      case 'bar':
+      case 'horizontalBar':
+      case 'line':
+        context = this.formatBarLineRadarChartContext(xColumnIndex);
+        break;
+      case 'doughnut':
+      case 'pie':
+      case 'polarArea':
+        context = this.formatDoughnutPiePolarChartContext(xColumnIndex);
+        break;
+      case 'radar':
+        context = this.formatBarLineRadarChartContext(xColumnIndex);
+        break;
+    }
+    this.state.chart = new Chart(this.state.canvas, context);
   },
   refreshForm() {
     let select = this.state.formColumnSelector;
@@ -173,16 +238,16 @@ const datasetChartJsPlugin = {
   },
   setChartType(type) {
     this.state.chartType = type;
-    this.refreshChart();
+    this.renderChart();
   },
   setData(data) {
     this.state.data = data;
-    this.refreshChart();
+    this.renderChart();
     this.refreshForm();
   },
   setXColumnName(name) {
     this.state.xColumnName = name;
-    this.refreshChart();
+    this.renderChart();
   },
   toggleShown() {
     this.state.shown = !this.state.shown;
@@ -197,3 +262,15 @@ const datasetChartJsPlugin = {
 document.addEventListener('DOMContentLoaded', () => {
   datasetChartJsPlugin.init();
 });
+CanvasRenderingContext2D.prototype.clear =
+  CanvasRenderingContext2D.prototype.clear ||
+  function (preserveTransform) {
+    if (preserveTransform) {
+      this.save();
+      this.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    this.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    if (preserveTransform) {
+      this.restore();
+    }
+  };
