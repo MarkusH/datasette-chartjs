@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.2.0 (under development)
+## Unreleased
+
+## 0.2.0 (2020-12-12)
 
 - Added support for horizontal bar, doughnut, pie, polar area, and radar charts.
 
