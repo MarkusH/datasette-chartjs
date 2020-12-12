@@ -30,9 +30,11 @@ setup(
             "static/datasette-chartjs.js",
         ],
     },
+    use_scm_version=True,
     entry_points={"datasette": ["chartjs = datasette_chartjs"]},
     install_requires=["datasette"],
     extras_require={"dev": ["pre-commit"], "test": ["pytest", "pytest-asyncio"]},
+    setup_requires=["setuptools_scm"],
     tests_require=["datasette-chartjs[test]"],
     python_requires=">=3.6",
 )
