@@ -103,24 +103,21 @@ const datasetChartJsPlugin = {
   },
   formatBarLineRadarChartContext(xColumnIndex) {
     let that = this;
-    let fill =
-      this.state.chartType === 'line' || this.state.chartType === 'radar'
-        ? false
-        : true;
     let labels = new Array();
     let datasets = new Array();
+    let dsIdx = 0;
     this.state.data.columns.forEach((column, index) => {
       if (index !== xColumnIndex) {
         datasets.push({
-          backgroundColor: that.colors[index % that.colors.length]
-            .alpha(0.5)
+          backgroundColor: that.colors[dsIdx % that.colors.length]
+            .alpha(this.state.chartType === 'radar' ? 0.1 : 0.5)
             .rgbaString(),
-          borderColor: that.colors[index % that.colors.length].rgbString(),
-          borderWidth: fill ? 1 : 2,
+          borderColor: that.colors[dsIdx % that.colors.length].rgbString(),
           data: new Array(),
-          fill: fill,
+          fill: this.state.chartType === 'line' ? false : true,
           label: column,
         });
+        dsIdx++;
       }
     });
     this.state.data.rows.forEach((row) => {
