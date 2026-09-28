@@ -147,7 +147,7 @@ const datasetChartJsPlugin = {
     let borderColors = [];
     for (let i = 0; i < this.state.data.columns.length; ++i) {
       backgroundColors.push(
-        this.colors[i % this.colors.length].alpha(0.5).rgbaString()
+        this.colors[i % this.colors.length].alpha(0.5).rgbaString(),
       );
       borderColors.push(this.colors[i % this.colors.length].rgbString());
     }
@@ -211,7 +211,7 @@ const datasetChartJsPlugin = {
         Array.from(e.getElementsByTagName('a')).forEach((a) => {
           a.href = a.href.split('#')[0] + document.location.hash;
         });
-      }
+      },
     );
     Array.from(document.getElementsByTagName('form')).forEach((form) => {
       form.action = form.action.split('#')[0] + document.location.hash;
@@ -278,7 +278,7 @@ const datasetChartJsPlugin = {
     return Object.keys(obj)
       .filter((key) => obj[key])
       .map(
-        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`
+        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`,
       )
       .join('&');
   },
